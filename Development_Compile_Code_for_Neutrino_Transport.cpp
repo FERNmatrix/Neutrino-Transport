@@ -164,6 +164,8 @@ int main() {
 	R_Out[][] = get_R_Out();
 	N_Eq = get_N_Eq();
 
+	double multi[40][40];
+
 	for (int i = 0; i < N_G; ++i){
 		for (int j = 0; j < N_G; ++j){
 			if (i = j) a[i][j] = dV[i];
