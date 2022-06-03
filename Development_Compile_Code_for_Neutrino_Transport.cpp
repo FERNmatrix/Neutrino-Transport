@@ -160,9 +160,50 @@ int main() {
 
 	eC = get_eC();
 	dV = get_dV();
-	R_In = get_R_In();
-	R_Out = get_R_Out();
+	R_In[][] = get_R_In();
+	R_Out[][] = get_R_Out();
 	N_Eq = get_N_Eq();
+
+	for (int i = 0; i < N_G; ++i){
+		for (int j = 0; j < N_G; ++j){
+			if (i = j) a[i][j] = dV[i];
+			else if (i != j) a[i][j] = 0;
+		}
+	}
+
+	for (int i = 0; i < N_G; ++i){
+		for (int j = 0; j < N_G; ++j){
+			multi[i][j] = 0;
+		}
+	}
+
+	for (int i = 0; i < N_G; ++i){
+		for (int j = 0; j < N_G; ++j){
+			for(int k = 0; k < N_G; ++k){
+				multi[i][j] += R_In[i][k] * a[k][j] 
+
+			}
+		}
+	}
+
+R_In_H = multi
+
+	for (int i = 0; i < N_G; ++i){
+		for (int j = 0; j < N_G; ++j){
+			multi[i][j] = 0;
+		}
+	}
+
+	for (int i = 0; i < N_G; ++i){
+		for (int j = 0; j < N_G; ++j){
+			for(int k = 0; k < N_G; ++k){
+				multi[i][j] += R_Out[i][k] * a[k][j] 
+
+			}
+		}
+	}
+
+R_Out_H = multi
 
 	cout << " t       dt       totalTimeSteps       ";
 
@@ -180,7 +221,20 @@ fprintf(pFile, "/n%7.4f %7.4f", t, dt);
 
 }
 
+// Initializing elements of matrix mult to 0.
+    for(i = 0; i < r1; ++i)
+        for(j = 0; j < c2; ++j)
+        {
+            mult[i][j]=0;
+        }
 
+    // Multiplying matrix a and b and storing in array mult.
+    for(i = 0; i < r1; ++i)
+        for(j = 0; j < c2; ++j)
+            for(k = 0; k < c1; ++k)
+            {
+                mult[i][j] += a[i][k] * b[k][j];
+            }
 
 
 // Functions Used in Main
@@ -278,8 +332,45 @@ double * ReadData1D(FileName, N) {
     	fclose(Log);  
 	}
 
+// BuildCollisionMatrix 
 
+void BuildCollisionMatrix(R_In, R_Out, N, dV, N_G, tol) {
 
+for (int i = 0; i < N_G; ++i){
+		for (int j = 0; j < N_G; ++j){
+			A[i][j] = 0;
+	}
+}
 
+for (int i = 0; i < N_G; ++i){
+	K[i][j] = 0;
 
+for (int i = 0; i < N_G; ++i){
+		for (int j = 0; j < N_G; ++j){
+			if( i != j){
+				B = ( R_In[i][j] * dV[i] + R_Out[i][j] * dV[j] );
+      			C = dV[i] * N[i] + dV[j] * N[j];
+        
+      			a = ( R_In[i][j] - R_Out[i][j] ) * dV[i];
+      			b = B + ( R_In[i][j] - R_Out[i][j] ) * C;
+      			c = R_In[i][j] * C;
+      			d = (b*b) - (4.0 * a * c);
+        
+      			N_Eq_i = 0.5 * ( b - sqrt( d ) ) / a;
+      			N_Eq_j = ( C - N_Eq_i * dV[i] ) / dV[j];
+			
+			else 
+				N_Eq_i = N[i];
+      			N_Eq_j = N[j];
+      	}
+      }
+    }
+
+diff_i = abs( N_Eq_i - N[i] ) / max( [ 1.d-16 N_Eq_i ] );
+    diff_j = abs( N_Eq_j - N[j] ) / max( [ 1.d-16 N_Eq_j ] );
+    if( or( diff_i > tol, diff_j > tol ) )
+
+      A[i][j] = A[i][j]+ (1.0 - N[i]) * R_In[i][j] * dV[j];
+      A[i][j] = A[i][j] - R_Out[i][j] * dV[j] * (1.0 -  N[j];
+      k[i] = k[i] + R_Out[i][j] * dV[j] + ( (R_In[i][j] * dV[j] - R_Out[i][j] * dV[j] * N[j] );
 
