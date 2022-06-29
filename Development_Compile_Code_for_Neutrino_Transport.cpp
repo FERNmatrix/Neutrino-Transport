@@ -24,7 +24,7 @@ AUTHORS:
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_complex.h>
-
+#include <string.h>
 using namespace std;
  using std::string;
 
@@ -60,7 +60,7 @@ double G_A = 7.5e-01;
 double G_B = 1.0e+02;    
 double G_C = sqrt(50.0);
 
-int cycleM = 10e9;    
+double cycleM = 10e9;    
 int cycleD = 100;     
 int cycleW = 10;      
 
@@ -81,6 +81,11 @@ char PlotFileDir[] = "Output";
 char PlotFileName[] = "PlotFile";
 int PlotFileNumber = 0;
 int nPlotFiles = 100; 
+double ** tempA[N_G][N_G];
+double * tempKvec[N_G];
+double ** tempF[N_G][N_G];
+double ** tempKmatrix[N_G][N_G];
+
 
 // Function signatures in main:
 
@@ -88,160 +93,177 @@ int nPlotFiles = 100;
  // class defenitions 
 
  class Utilities{
-	private:
-	public:
-		double eC[N_G];
-		double de[N_G];
+  private:
+  public:
+    double eC[N_G];
+    double de[N_G];
 
- 		void initalizeNES();
- 		double * ReadData1D(double FileName, double N);
- 		double * ReadData2D(double FileName, double M, double N);
- 		static void startTimer(){
- 			START_CPU // Start a timer for rate calculation
- 		}
+    void initalizeNES();
+    double * ReadData1D(char FileName[], double N);
+    double ** ReadData2D(char FileName[], double M, double N);
+    static void startTimer(){
+      START_CPU // Start a timer for rate calculation
+    }
 
- 		static void stopTimer(){
+    static void stopTimer(){
 
- 			STOP_CPU;
- 			printf("\n");
- 			PRINT_CPU;
- 			printf("\n");
- 		}
- 	};
+      STOP_CPU;
+      printf("\n");
+      PRINT_CPU;
+      printf("\n");
+    }
+  };
 
 
 
 void Utilities::initalizeNES(){
- 			double *eC;
- 			eC = ReadData1D('Data/NES_RATES_EnergyBinCenter.dat',N_G);
- 			double *de;
- 			de = ReadData1D('Data/NES_RATES_EnergyBinWidth.dat',N_G);
- 			double dV[N_G];
+      double * eC = ReadData1D("Data/NES_RATES_EnergyBinCenter.dat",N_G);
+      double * de = ReadData1D("Data/NES_RATES_EnergyBinWidth.dat",N_G);
+      double dV[N_G];
 
- 			double N_Eq[N_G];
-
- 			for (int i = 0; i <= (N_G-1); ++i){
-
- 			dV[i]= (pow(eC[i]+0.5e0*de[i],3) - pow(eC[i]-0.5e0*de[i],3))/3.0e0;
-
- 			}
- 			double *R_In;
- 			R_In = ReadData2D('Data/NES_RATES_R_In___001.dat',N_G,N_G);
+      double N_Eq[N_G];
+    for (int i = 0; i <= (N_G-1); ++i){
+    
+    dV[i]= (pow(eC[i]+0.5e0*de[i],3) - pow(eC[i]-0.5e0*de[i],3))/3.0e0;
 
 
- 			int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In); // This function makes R_Out the conjugate transpose of R_In 
+      }
+ //     double *R_In;
+      double **R_In = ReadData2D("Data/NES_RATES_R_In___001.dat",N_G,N_G);
 
-			switch(model) {
- 				case 1:
- 					int mu = 145.254;
- 					int kt = 20.5399;
- 					N_Eq = 1.0 /  (exp( (eC-mu)/kt ) + 1.0);
- 					for (int j = 1; j <= N_G; ++j){
- 						for (int i = 1; i <= N_G; ++i){
- 							if( j < i )
- 								R_In(j,i) = R_In(j,i)  * exp( ( eC(j) - eC(i) ) / kt );
- 						}
- 					}
+//      double *R_Out;
 
- 				break;
-
- 		 			int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
-
- 				case 2:	
- 					int mu = 045.835;
- 					int kt = 15.9751;
- 					N_Eq = 1.0 /  (exp( (eC-mu)/kt ) + 1.0);
- 					for (int j = 1; j <= N_G; ++j){
- 						for (int i = 1; i <= N_G; ++i){
- 							if( j < i )
- 								R_In(i,j) = R_In(j,i) * exp( ( eC(j) - eC(i) ) / kt );
- 						}
- 					}
-
- 				break;
-
- 		 			int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
- 				case 3:
-					int mu = 020.183;
- 					int kt = 07.7141;
- 					N_Eq = 1.0 /  (exp( (eC-mu)/kt ) + 1.0);
- 					for (int j = 1; j <= N_G; ++j){
- 						for (int i = 1; i <= N_G; ++i){
- 							if( j < i )
- 								R_In(i,j) = R_In(j,i) * exp( ( eC(j) - eC(i) ) / kt );
- 						}
- 					}
-
- 				break;
-
- 		 			int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
- 				case 4:
- 					int mu = 009.118;
- 					int kt = 07.5830;
- 					N_Eq = 1.0 /  (exp( (eC-mu)/kt ) + 1.0);
- 					for (int j = 1; j <= N_G; ++j){
- 						for (int i = 1; i <= N_G; ++i){
- 							if( j < i )
- 								R_In(i,j) = R_In(j,i) * exp( ( eC(j) - eC(i) ) / kt );
- 						}
- 					}
-
- 				break;
-
- 		 			int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
- 				case 5:
- 					int mu = 003.886;
- 					int kt = 03.1448;
- 					N_Eq = 1.0 /  (exp( (eC-mu)/kt ) + 1.0);
- 					for (int j = 1; j <= N_G; ++j){
- 						for (int i = 1; i <= N_G; ++i){
- 							if( j < i )
- 								R_In(i,j) = R_In(j,i) * exp( ( eC(j) - eC(i) ) / kt );
- 							
- 						}
- 					}
-
- 				break;
-
- 		 			int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
- 				default: N_Eq = 1.0
- 				break;
- 		}
- 	}
+//      R_Out = conj(R_In);
+//      N_Eq =1.0/ (exp(int gsl_vector_div(gsl_vector *(eC-mu), const gsl_vector *kt))+1.0);
 
 
-double * Utilities::ReadData1D(double FileName, double N) {
+    int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In); // This function makes R_Out the conjugate transpose of R_In 
+//      int k = 0;
+      switch(model) {
+        case 1:
+          double mu = 145.254;
+          double kt = 20.5399;
+          for (int i = 1; i <= N_G; ++i){
+             N_Eq[N_G] = 1 /  (exp( (eC[i]-mu)/kt ) + 1);
+          }
+          for (int j = 1; j <= N_G; ++j){
+            for (int i = 1; i <= N_G; ++i){
+              if( j < i )
+                R_In[j][i] = R_In[j][i] * exp( ( eC[j] - eC[i] ) / kt );
+            }
+          }
+
+        break;
+
+        int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
+
+        case 2: 
+           mu = 045.835;
+           kt = 15.9751;
+          for (int i = 1; i <= N_G; ++i){
+             N_Eq[N_G] = 1 /  (exp( (eC[i]-mu)/kt ) + 1);
+          }
+          for (int j = 1; j <= N_G; ++j){
+            for (int i = 1; i <= N_G; ++i){
+              if( j < i )
+                R_In[j][i] = R_In[j][i] * exp( ( eC[j] - eC[i] ) / kt );
+            }
+          }
+
+        break;
+
+        int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
+
+        case 3:
+           mu = 020.183;
+           kt = 07.7141;
+          for (int i = 1; i <= N_G; ++i){
+             N_Eq[N_G] = 1 /  (exp( (eC[i]-mu)/kt ) + 1);
+          }
+          for (int j = 1; j <= N_G; ++j){
+            for (int i = 1; i <= N_G; ++i){
+              if( j < i )
+                R_In[j][i] = R_In[j][i] * exp( ( eC[j] - eC[i] ) / kt );
+            }
+          }
+
+        break;
+
+        int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
+
+        case 4:
+           mu = 009.118;
+           kt = 07.5830;
+          for (int i = 1; i <= N_G; ++i){
+             N_Eq[N_G] = 1 /  (exp( (eC[i]-mu)/kt ) + 1);
+          }
+          for (int j = 1; j <= N_G; ++j){
+            for (int i = 1; i <= N_G; ++i){
+              if( j < i )
+                R_In[j][i] = R_In[j][i]  * exp( ( eC[j] - eC[i] ) / kt );
+            }
+          }
+
+        break;
+
+        int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
+        case 5:
+           mu = 003.886;
+           kt = 03.1448;
+          for (int i = 1; i <= N_G; ++i){
+             N_Eq[N_G] = 1 /  (exp( (eC[i]-mu)/kt ) + 1);
+          }
+          for (int j = 1; j <= N_G; ++j){
+            for (int i = 1; i <= N_G; ++i){
+              if( j < i )
+                R_In[j][i] = R_In[j][i]  * exp( ( eC[j] - eC[i] ) / kt );
+              
+            }
+          }
+
+        break;
+
+        int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
+        default: N_Eq[N_G] = 1.0;
+      
+      }
+}
+  
+  
+
+
+double * Utilities::ReadData1D(char FileName[], double N) {
  FILE *fr;
- fr = fopen(FileName, "r")
-	double Data1D[40];
+ fr = fopen(FileName, "r");
+  double Data1D[40];
 
-	while (!feof(fr)){
+  while (!feof(fr)){
 
-		fread(Data1D, sizeof(Data1D), 1, fr);
-		cout << Data1D;
-	}
-	fclose (fr);
-	return Data1D;
+    fread(Data1D, sizeof(Data1D), 1, fr);
+    cout << Data1D;
+  }
+  fclose (fr);
+  return Data1D;
 }
 
-void Utilities::ReadData2D(double FileName, double M, double N) {
-	File *fr;
-	fr = fopen(FileName, "r");
-	double Data2D[40][40];
-	while (!feof(fr)){
+double ** Utilities::ReadData2D(char FileName[], double M, double N) {
+  FILE *fr;
+  fr = fopen(FileName, "r");
+  double ** Data2D[40][40];
+  while (!feof(fr)){
 
-		fread(Data2D, sizeof(Data2D), 1, fr);
-		cout << Data2D
+    fread(Data2D, sizeof(Data2D), 1, fr);
+    cout << ReadData2D;
 
-		int flat[100];
+    int flat[100];
     for (int i=0; i<100; ++i)
        flat[i]=i;
-   		   int (&square)[10][10] = *reinterpret_cast<int(*)[10][10]>(flat);
+         int (&square)[10][10] = *reinterpret_cast<int(*)[10][10]>(flat);
    for (int i=0; i<10; ++i)
         cout << square[5][i] << ' ';
    cout << '\n';
    fclose (fr);
-   return Data2D
+   return ** Data2D;
 
 }
 
@@ -250,93 +272,103 @@ void Utilities::ReadData2D(double FileName, double M, double N) {
 int main() {
 Utilities::startTimer();
 
-	FILE *pFile;
-	pFile = fopen("output/NT.data","w");
-	int totalTimeSteps = 0;
-	Logfile(stop_time, t, t_W0, dt, G_A, G_B, G_C, tolC, scheme, Comment);
+  FILE *pFile;
+  pFile = fopen("output/NT.data","w");
+  int totalTimeSteps = 0;
+  Logfile(stop_time, t, t_W0, dt, G_A, G_B, G_C, tolC, scheme, Comment);
 
 fprintf(pFile, "# data_output \n");
 fprintf(pFile, "#       t        dt  \n");
 
-	initializeNES( Model, N_g);
+  initializeNES( Model, N_g);
 
-	eC = get_eC();
-	dV = get_dV();
-	R_In[][] = get_R_In();
-	R_Out[][] = get_R_Out();
-	N_Eq = get_N_Eq();
+  eC = get_eC();
+  dV = get_dV();
+  R_In[][] = get_R_In();
+  R_Out[][] = get_R_Out();
+  N_Eq = get_N_Eq();
 
-	double multi[40][40];
+  double multi[40][40];
 
-	for (int i = 0; i < N_G; ++i){
-		for (int j = 0; j < N_G; ++j){
-			if (i = j) a[i][j] = dV[i];
-			else if (i != j) a[i][j] = 0;
-		}
-	}
+  for (int i = 0; i < N_G; ++i){
+    for (int j = 0; j < N_G; ++j){
+      if (i = j) a[i][j] = dV[i];
+      else if (i != j) a[i][j] = 0;
+    }
+  }
 
-	for (int i = 0; i < N_G; ++i){
-		for (int j = 0; j < N_G; ++j){
-			multi[i][j] = 0;
-		}
-	}
+  for (int i = 0; i < N_G; ++i){
+    for (int j = 0; j < N_G; ++j){
+      multi[i][j] = 0;
+    }
+  }
 
-	for (int i = 0; i < N_G; ++i){
-		for (int j = 0; j < N_G; ++j){
-			for(int k = 0; k < N_G; ++k){
-				multi[i][j] += R_In[i][k] * a[k][j] 
+  for (int i = 0; i < N_G; ++i){
+    for (int j = 0; j < N_G; ++j){
+      for(int k = 0; k < N_G; ++k){
+        multi[i][j] += R_In[i][k] * a[k][j] 
 
-			}
-		}
-	}
+      }
+    }
+  }
 
 R_In_H = multi
 
-	for (int i = 0; i < N_G; ++i){
-		for (int j = 0; j < N_G; ++j){
-			multi[i][j] = 0;
-		}
-	}
+  for (int i = 0; i < N_G; ++i){
+    for (int j = 0; j < N_G; ++j){
+      multi[i][j] = 0;
+    }
+  }
 
-	for (int i = 0; i < N_G; ++i){
-		for (int j = 0; j < N_G; ++j){
-			for(int k = 0; k < N_G; ++k){
-				multi[i][j] += R_Out[i][k] * a[k][j] 
+  for (int i = 0; i < N_G; ++i){
+    for (int j = 0; j < N_G; ++j){
+      for(int k = 0; k < N_G; ++k){
+        multi[i][j] += R_Out[i][k] * a[k][j] 
 
-			}
-		}
-	}
+      }
+    }
+  }
 
 R_Out_H = multi
 
 if (reStart == true) {
-	end;
+  end;
 }
 
 else {
 
-	for (int i = 0; i < N_G; ++i) {
+  for (int i = 0; i < N_G; ++i) {
 
  N_0[i] = G_A * exp( - 0.5 * pow(( ( eC[i] - G_B ) / G_C ),2));
-	
-	}
+  
+  }
 }
 
 
 
 
-Nold = N_0[i]
 
-[cMat, kVec] = BuildCollisionMatrix(R_In, R_Out, Nold, dV, N_G, 0.0);
+for (int i = 0; i < N_G; ++i){
+ Nold = N_0[i];
+}
 
-done   = false;
-reStep = false;
-cycle  = 0;
-true_cycle = 0;
-nIterations = 0;
-nTrueIterations = 0;
-maxFPIterations = 10000; 
-mAA = 3; 
+
+
+void BuildCollisionMatrix(R_In, R_Out, Nold, dV, N_G, 0.0);
+
+double ** cMat[40][40];
+cMat[40][40] = get_cMat();
+double * kVec[40];
+kVec[40] = get_kVec();
+
+bool done   = false;
+bool reStep = false;
+int cycle  = 0;
+int true_cycle = 0;
+int nIterations = 0;
+int nTrueIterations = 0;
+int maxFPIterations = 10000; 
+int mAA = 3; 
 
 
 PlotFileNumber = Write_Plotfile ( t, dt, Nold, eC, dV, kVec, cMat, 0, 0, 0, 0, FE, dt, dt, dt, PlotFileDir, PlotFileName, PlotFileNumber );
@@ -348,133 +380,159 @@ while (done != true) {
 
  true_cycle = true_cycle + 1; 
 
-if not( reStep ) {
+  if not( reStep ) {
 
-	cycle = cycle +1;
+  cycle = cycle +1;
 
-	}
+  }
 
+
+
+  Nold = ApplyPerturbation(Nold, amp dV, N_G);
+
+  switch Scheme {
+
+  case 'ExplicitAsymptotic'
+
+  Branch = EA;
+
+void BuildCollisionMatrix(R_In, R_Out, Nold, dV, N_G, 0.0);
+
+cMat[40][40] = get_cMat();
+kVec[40] = get_kVec();
+
+  dt_FE = min(1.0 / kVec);
+
+  if reStep {
+
+    dt = (dt_dec * dt);
+    reStep = false;
+
+    else 
+      dt = dt_grw * dt;
+
+  }
+
+  if dt <= dt_FE {
+
+    Nnew = Nold + dt * (cMat * Nold);
 }
+  else {
 
-Nold = ApplyPerturbation(Nold, amp dV, N_G)
-
-switch Scheme {
-
-	case 'ExplicitAsymptotic'
-
-	Branch = EA;
-
-	[cMat, kVec] = BuildCollisionMatrix(R_In, R_Out, Nold, dV, N_G, 0.0);
-
-	dt_FE = min(1.0 / kVec);
-
-	if reStep {
-
-		dt = (dt_dec * dt);
-		reStep = false;
-
-		else 
-			dt = dt_grw * dt;
-
-	}
-
-	if dt <= dt_FE {
-
-		Nnew = Nold + dt * (cMat * Nold);
-}
-	else {
-
-		Nnew = Nold + (dt / (1.0 + kVec *dt)) * (cMat * Nold);
+    Nnew = Nold + (dt / (1.0 + kVec *dt)) * (cMat * Nold);
 }
 
 if( abs( sum(Nnew * dV) - sum(Nold * dV) ) / sum(Nold * dV) > tolC ) {
 
-	reStep = true;
+  reStep = true;
 }
 
 if ( max( abs( Nnew - Nold ) / max( Nold, 1.0d-8 ) ) > tolN ) {
 
-	reStep = true;
+  reStep = true;
 
 }
 
 
-	case 'PartialEquilibrium'
+  case 'PartialEquilibrium'
 
-	Branch = FE_PE;
+  Branch = FE_PE;
 
-	[cMat, kVec] = BuildCollisionMatrix_NES( R_In, R_Out, Nold, dV, N_g, tolPE );
+  void BuildCollisionMatrix(R_In, R_Out, Nold, dV, N_G, tolPE);
 
-	dt = min( min( 1.0 / kVec ), dt_grw * dt);
+  cMat[40][40] = get_cMat();
+  kVec[40] = get_kVec();
 
-	Nnew = Nold + dt * (cMat * Nold);
 
-	case 'QuasiSteadyState'
+  dt = min( min( 1.0 / kVec ), dt_grw * dt);
 
-	Branch = QSS1;
+  Nnew = Nold + dt * (cMat * Nold);
 
-	if reStep {
-		dt = dt_dec * dt;
-		reStep = false;
-	}
+  case 'QuasiSteadyState'
 
-		else
-			dt = dt_grw * dt;
-	}
+  Branch = QSS1;
 
-	[ F0, k0 ] = ComputeRates( R_In, R_Out, Nold, dV);
-	
-	exp_kdt = exp( - dt * k0 );
+  if reStep {
+    dt = dt_dec * dt;
+    reStep = false;
+  }
+
+    else
+      dt = dt_grw * dt;
+  
+
+  void ComputeRates( R_In, R_Out, Nold, dV);
+
+  double ** F0[40][40];
+  F0[40][40] = get_F0();
+  double ** k0[40][40];
+  k0[40][40] = get_k0();
+  
+  exp_kdt = exp( - dt * k0 );
       
     dt_FE = min( 1.0 / k0 );
       
     if( dt <= dt_FE ) {
 
-    	[ cMat, kVec ] = BuildCollisionMatrix_NES( R_In, R_Out, Nold, dV, N_g, 0.0 );
+    void BuildCollisionMatrix(R_In, R_Out, Nold, dV, N_G, 0.0); 
+
+    cMat[40][40] = get_cMat();
+    kVec[40] = get_kVec();
+
 
     Nnew = Nold + dt * ( cMat * Nold );
 
     nTrueIterations = nTrueIterations + 1 ;
 
-	}
+  }
 
     else {
-    	[ cMat, kVec ] = BuildCollisionMatrix_NES( R_In, R_Out, Nold, dV, N_g, 0.0 );
+      void BuildCollisionMatrix(R_In, R_Out, Nold, dV, N_G, 0.0);
 
-  		Nnew = Nold + ( cMat * Nold ) * ( 1.0 - exp_kdt ) / k0;
-  	}
+      cMat[40][40] = get_cMat();
+      kVec[40] = get_kVec();
 
-  	if ( abs( sum(Nnew * dV) - sum(Nold * dV) ) / sum(Nold * dV) > tolC ) {
-  		reStep = true;
 
-  		}
+      Nnew = Nold + ( cMat * Nold ) * ( 1.0 - exp_kdt ) / k0;
+    }
 
-  	case 'QSScorrection'
+    if ( abs( sum(Nnew * dV) - sum(Nold * dV) ) / sum(Nold * dV) > tolC ) {
+      reStep = true;
 
-  	Branch = QSS2;
+      }
 
-  	if reStep {
-  		dt = dt_dec * dt; 
+    case 'QSScorrection'
+
+    Branch = QSS2;
+
+    if reStep {
+      dt = dt_dec * dt; 
         reStep = false;
       else
         dt = dt_grw * dt;
-	}
+  }
 
-	[ F0, k0 ] = ComputeRates( R_In, R_Out, Nold, dV );
+    void ComputeRates( R_In, R_Out, Nold, dV );
+    F0
+    k0
       
-	dt_FE = min( 1.0 ./ k0 );
+  dt_FE = min( 1.0 ./ k0 );
 
-	if dt <= dt_FE {
-		[ cMat, kVec ] = BuildCollisionMatrix_NES( R_In, R_Out, Nold, dV, N_g, 0.0 );
+  if dt <= dt_FE {
+    void BuildCollisionMatrix(R_In, R_Out, Nold, dV, N_G, 0.0);
 
-	Nnew = Nold + dt * ( cMat * Nold );
+    cMat[40][40] = get_cMat();
+    kVec[40] = get_kVec();
 
-	nTrueIterations = nTrueIterations + 1;
 
-	}
+  Nnew = Nold + dt * ( cMat * Nold );
 
-	else {
-		r0 = 1.0 / (k0 * dt);      
+  nTrueIterations = nTrueIterations + 1;
+
+  }
+
+  else {
+    r0 = 1.0 / (k0 * dt);      
          
          Alpha0 = ((160 * r0^3) + (60 * r0^2) + (11 * r0) + 1) /((360 * r0^3) + (60 * r0^2) + (12 * r0) + 1);
      
@@ -499,78 +557,89 @@ if ( max( abs( Nnew - Nold ) / max( Nold, 1.0d-8 ) ) > tolN ) {
       
       if( abs( sum(Nnew * dV) - sum(Nold * dV) ) / sum(Nold * dV) > tolC ) {
         reStep = true;
-    	}
-	}
-/*
-	case 'BackwardEuler'
-
-	Branch = BE;
-
-	[cMat, kVec] = BuildCollisionMatrix_NES( R_In, R_Out, Nold, dV, N_g, 0.0 );
-
-	 dt_FE = min( 1.0 / kVec );
-        
-     if( reStep ) {
-        dt = dt_dec * dt;
-        reStep = false;
+      }
   }
+
+
+  case 'BackwardEuler'
+
+  Branch = BE;
+
+  void BuildCollisionMatrix(R_In, R_Out, Nold, dV, N_G, 0.0);
+
+  cMat[40][40] = get_cMat();
+  kVec[40] = get_kVec();
+
+
+   dt_FE = min( 1.0 / kVec );
+        
+    if( reStep ) {
+       dt = dt_dec * dt;
+               reStep = false;
+   }
     else {
         dt = dt_grw * dt;
        }
 
     if( dt <= dt_FE ) {
-          
+         
           Nnew = Nold + dt * ( cMat * Nold );
         
           nTrueIterations = nTrueIterations + 1;
       }
 
     else 
-    	[Nnew, nIterations] = NewtonRaphson( Nold, dt, R_In_H, R_Out_H, N_g, tolBE );
+     [Nnew, nIterations] = NewtonRaphson( Nold, dt, R_In_H, R_Out_H, N_g, tolBE );
 
-    nTrueIterations = nTrueIterations + nIterations;
+   nTrueIterations = nTrueIterations + nIterations;
 
     if ( max( abs( Nnew - Nold ) / max( Nold, 1.0d-8 ) ) > tolN ) {
             reStep = true; 
 
     }
-}
-*/
-	default: 
 
-	 Branch = FE;
-	 [cMat, kVec] = BuildCollisionMatrix_NES( R_In, R_Out, Nold, dV, N_g, 0.0 );
-	 dt = min( min( 1.0 ./ kVec ), dt_grw * dt );
-	 Nnew = Nold + dt * ( cMat * Nold );
-	
+
+  default: 
+
+   Branch = FE;
+   void BuildCollisionMatrix(R_In, R_Out, Nold, dV, N_G, tolPE);
+    cMat[40][40] = get_cMat();
+    kVec[40] = get_kVec();
+
+   dt = min( min( 1.0 ./ kVec ), dt_grw * dt );
+   Nnew = Nold + dt * ( cMat * Nold );
+  
+
+}
+
 
 
 if  not( reStep ) {
 
-	Nold = Nnew;
-	t    = t + dt;
+  Nold = Nnew;
+  t    = t + dt;
 }
 
 if t >= t_end || cycle >= cycleM {
 
-	done = true;
+  done = true;
 }
 
 if  if mod(cycle, cycleD) == 1 {
-	disp( fprintf( '  Cycle = %d, t = %d, dt = %d ', cycle, t, dt ) );
+  disp( fprintf( '  Cycle = %d, t = %d, dt = %d ', cycle, t, dt ) );
 }
 
 if  t >= wrtTimes(wrtCount) {
 
 // Write data file
 
-	PlotFileNumber = Write_Plotfile( t, dt, Nold, eC, dV, kVec, cMat, cycle, true_cycle, nIterations, nTrueIterations, Branch, dt_FE, dt_EA, dt_PE, PlotFileDir, PlotFileName, PlotFileNumber);
+  PlotFileNumber = Write_Plotfile( t, dt, Nold, eC, dV, kVec, cMat, cycle, true_cycle, nIterations, nTrueIterations, Branch, dt_FE, dt_EA, dt_PE, PlotFileDir, PlotFileName, PlotFileNumber);
 
 wrtCount = wrtCount  + 1;
 
-	}
+  }
 
-
+}
 Utilities::stopTimer();
 
 //********************************************************
@@ -596,6 +665,22 @@ Utilities::stopTimer();
 
 // Functions Used in Main
 
+// Get Functions
+
+double ** get_cMat(){
+  return ** tempA;
+}
+double * get_kVec(){
+  return * tempKvec;
+}
+
+double ** get_F0(){
+  return ** tempF;
+}
+
+double ** get_k0(){
+  return ** tempKmatrix;
+}
 // Write_Plotfile
 
 int Write_Plotfile( double t, double dt )
@@ -648,73 +733,78 @@ return AAA;
 
 // Logfile
 
-	void logfile(t_end, t, t_W0, dt, G_A, G_B, G_C, tolC, Scheme, Comment) 
-	FILE *Log;
-	Log = fopen("Log.txt", "a");
-	if(log!=NULL){
-		fprintf(Log,' t_end =%5d\n', t_end );
-    	fprintf(Log,' t     =%5d\n', t );
-    	fprintf(Log,' t_W0  =%5d\n', t_W0 );
-   		fprintf(Log,' dt    =%5d\n', dt );
-    	fprintf(Log,' G_A   =%5d\n', G_A );
-    	fprintf(Log,' G_B   =%5d\n', G_B );
-    	fprintf(Log,' G_C   =%5d\n', G_C );
-    	fprintf(Log,' tolC  =%5d\n', tolC );
-    	fprintf(Log,' Scheme=%s\n', Scheme );
-    	fprintf(Log,' Comment: %s\n', Comment );
-    	fprintf(Log, '\n' );
-    	fclose(Log);  
-	}
+  void logfile(t_end, t, t_W0, dt, G_A, G_B, G_C, tolC, Scheme, Comment) 
+  FILE *Log;
+  Log = fopen("Log.txt", "a");
+  if(log!=NULL){
+    fprintf(Log,' t_end =%5d\n', t_end );
+      fprintf(Log,' t     =%5d\n', t );
+      fprintf(Log,' t_W0  =%5d\n', t_W0 );
+      fprintf(Log,' dt    =%5d\n', dt );
+      fprintf(Log,' G_A   =%5d\n', G_A );
+      fprintf(Log,' G_B   =%5d\n', G_B );
+      fprintf(Log,' G_C   =%5d\n', G_C );
+      fprintf(Log,' tolC  =%5d\n', tolC );
+      fprintf(Log,' Scheme=%s\n', Scheme );
+      fprintf(Log,' Comment: %s\n', Comment );
+      fprintf(Log, '\n' );
+      fclose(Log);  
+  }
 
 // BuildCollisionMatrix 
 
 void BuildCollisionMatrix( double R_In[], double R_Out[], double N, double dV, int N_G, double tol) {
 
 for (int i = 0; i < N_G; ++i){
-		for (int j = 0; j < N_G; ++j){
-			A[i][j] = 0;
-	}
+    for (int j = 0; j < N_G; ++j){
+      A[i][j] = 0;
+  }
 }
 
 for (int i = 0; i < N_G; ++i){
-	K[i][j] = 0;
+  for (int j = 0; j < N_G; ++j){
+  K[i][j] = 0;
+  }
+}
 
 for (int i = 0; i < N_G; ++i){
-		for (int j = 0; j < N_G; ++j){
-			if( i != j){
-				B = ( R_In[i][j] * dV[i] + R_Out[i][j] * dV[j] );
-      			C = dV[i] * N[i] + dV[j] * N[j];
+    for (int j = 0; j < N_G; ++j){
+      if( i != j){
+        B = ( R_In[i][j] * dV[i] + R_Out[i][j] * dV[j] );
+            C = dV[i] * N[i] + dV[j] * N[j];
         
-      			a = ( R_In[i][j] - R_Out[i][j] ) * dV[i];
-      			b = B + ( R_In[i][j] - R_Out[i][j] ) * C;
-      			c = R_In[i][j] * C;
-      			d = (b*b) - (4.0 * a * c);
+            a = ( R_In[i][j] - R_Out[i][j] ) * dV[i];
+            b = B + ( R_In[i][j] - R_Out[i][j] ) * C;
+            c = R_In[i][j] * C;
+            d = (b*b) - (4.0 * a * c);
         
-      			N_Eq_i = 0.5 * ( b - sqrt( d ) ) / a;
-      			N_Eq_j = ( C - N_Eq_i * dV[i] ) / dV[j];
-			
-			else 
-				N_Eq_i = N[i];
-      			N_Eq_j = N[j];
-      	}
+            N_Eq_i = 0.5 * ( b - sqrt( d ) ) / a;
+            N_Eq_j = ( C - N_Eq_i * dV[i] ) / dV[j];
       }
+      else {
+        N_Eq_i = N[i];
+            N_Eq_j = N[j];
+        }
+      
     }
+}
+
 
 diff_i = abs( N_Eq_i - N[i] ) / max( [ 1.d-16 N_Eq_i ] );
     diff_j = abs( N_Eq_j - N[j] ) / max( [ 1.d-16 N_Eq_j ] );
     if( or( diff_i > tol, diff_j > tol ) )
 
       A[i][j] = A[i][j]+ (1.0 - N[i]) * R_In[i][j] * dV[j];
-      A[i][j] = A[i][j] - R_Out[i][j] * dV[j] * (1.0 -  N[j];
-      k[i] = k[i] + R_Out[i][j] * dV[j] + ( (R_In[i][j] * dV[j] - R_Out[i][j] * dV[j] * N[j] );
+      A[i][j] = A[i][j] - R_Out[i][j] * dV[j] * (1.0 -  N[j]);
+      k[i] = k[i] + R_Out[i][j] * dV[j] + ( (R_In[i][j] * dV[j] - R_Out[i][j] * dV[j] * N[j]));
 
-
+}
 // ComputeRates
 
 void ComputeRates( double R_In[], double R_Out[], double N, double dV ) {
 
-	F = R_In * ( N * dV );
-  	k = F + R_Out * ( ( 1.0 - N ) * dV );
+  F = R_In * ( N * dV );
+    k = F + R_Out * ( ( 1.0 - N ) * dV );
 
   }
 
