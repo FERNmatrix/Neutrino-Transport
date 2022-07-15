@@ -1,0 +1,3 @@
+Development Compile Code for Neutrino Transport
+Can be compiled using *g++ Development_Compile_Code_for_Neutrino_Transport.cpp -o -lgsl -lgslcblas -lm -lstdc++ 
+Can also be compiled with gsl include flags *g++ -Wall -I/opt/homebrew/Cellar/gsl/2.7.1/include -c Development_Compile_Code_for_Neutrino_Transport.cpp
