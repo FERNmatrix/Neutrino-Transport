@@ -25,9 +25,6 @@ AUTHORS:
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_complex.h>
 #include <string.h>
-double max(double __lcpp_x);
-double min(double __lcpp_x);
-double sum(double, double);
 static FILE* pFile; 
 
 
@@ -43,10 +40,10 @@ clock_t startCPU, stopCPU;
 #define FPRINTF_CPU2 (printf(pFile2, "in %7.4e seconds\n", (double)(stopCPU-startCPU)/CLOCKS_PER_SEC));
 #define FPRINTF_CPUD (printf(pFileD, "in %g seconds\n", (double)(stopCPU-startCPU)/CLOCKS_PER_SEC));
 #define PRINT_CPU_TEST (printf("\nTimer Test: %g ms used by CPU\n", 1000*(double)(stopCPU-startCPU)/CLOCKS_PER_SEC));
+
 // Global Variables
 
 int model = 1;
-// const int N_G = 40;
 double stoptime = 1.0e2;
 double t = 1.0e-15;
 double t_W0 = 1.0e-10;
@@ -95,6 +92,7 @@ int PlotFileNumber = 0;
 int nPlotFiles = 100; 
 
 // Global Arrays used in Main
+
 double ** tempA[N_G][N_G];
 double * tempKvec[N_G];
 double ** tempF[N_G][N_G];
@@ -110,9 +108,15 @@ double *dV[N_G];
 double **R_In[40][40];
 double **R_Out[40][40];
 double *N_Eq[N_G];
-double *N[40];
+double *N[N_G];
+
+// Function Definitions
+double max_element(double __lcpp_x);
+double min_element(double __lcpp_x);
+double sum(double, double);
 
 // Write Plotfile
+
 int  wrtCount;
 int  wrtTimes;
 int logspace();
@@ -121,7 +125,6 @@ int FileNumber = 0;
  
 //myFunctions
 
-// Logfile
 void logfile() {
 	FILE* Log = fopen("logFile.txt", "a");
   if (Log!=NULL){
@@ -142,6 +145,7 @@ void logfile() {
 
 
 // Function signatures in main:
+
 // Functions Used in Main
 
 // Get Functions
@@ -170,7 +174,7 @@ double ** get_Fp(){
 
 int Write_Plotfile() {
 
-std::fprintf(pFile, "%7.4f %7.4f", t, dt);
+std::fprintf(pFile, "%7.4f %7.4f %7.4f", t, dt, eC);
 
 FileNumber = FileNumber + 1; 
 
@@ -180,14 +184,14 @@ return  FileNumber;
 
 
 
-//Utilities initalizeNES;
+//Utilities initalizeNES 
 double * get_eC(){
 
 double * AAA = *eC;
 
 return AAA;
-
 }
+
 //Utilities initalizeNES;
 double * get_dV(){
 
@@ -322,17 +326,12 @@ void ComputeRates( double F[40][40], double k[40][40]) {
 
 
       }
- //     double *R_In;
-       **R_In = ReadData2D("Data/NES_RATES_R_In___001.dat",N_G,N_G);
 
-//      double *R_Out;
-
-//      R_Out = conj(R_In);
-//      N_Eq =1.0/ (exp(int gsl_vector_div(gsl_vector *(eC-mu), const gsl_vector *kt))+1.0);
+    **R_In = ReadData2D("Data/NES_RATES_R_In___001.dat",N_G,N_G);
 
 
-    int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In); // This function makes R_Out the conjugate transpose of R_In 
-//      int k = 0;
+    //int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In); // This function makes R_Out the conjugate transpose of R_In 
+
       switch(model) {
         case 1: {
           double mu = 145.254;
@@ -349,7 +348,7 @@ void ComputeRates( double F[40][40], double k[40][40]) {
 
         break;
         }
-        int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
+        //int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
 
         case 2: {
            double mu = 045.835;
@@ -366,7 +365,7 @@ void ComputeRates( double F[40][40], double k[40][40]) {
 
         break;
         }
-        int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
+        //int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
 
         case 3: {
            double mu = 020.183;
@@ -383,7 +382,7 @@ void ComputeRates( double F[40][40], double k[40][40]) {
 
         break;
         }
-        int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
+        //int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
 
         case 4: {
            double mu = 009.118;
@@ -400,7 +399,7 @@ void ComputeRates( double F[40][40], double k[40][40]) {
 
         break;
         }
-        int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
+        //int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
         case 5: {
            double mu = 003.886;
            double kt = 03.1448;
@@ -423,8 +422,6 @@ void ComputeRates( double F[40][40], double k[40][40]) {
       }
 }
   
-  
-
 
 double * Utilities::ReadData1D(char FileName[], double N) {
  FILE *fr;
@@ -472,7 +469,7 @@ Utilities::startTimer();
   logfile();
 
 std::fprintf(pFile, "# data_output \n");
-std::fprintf(pFile, "#       t        dt  \n");
+std::fprintf(pFile, "#       t        dt  %/n");
 
 Utilities initalizeNES; 
 
@@ -533,9 +530,6 @@ else {
 }
 
 
-
-
-
 for (int i = 0; i < N_G; ++i){
   Nold[N_G] = N_0[N_G];
 }
@@ -575,7 +569,7 @@ while (done != true) {
 
   }
 
- // Nold = ApplyPerturbation(Nold, amp dV, N_G);
+ // Nold = ApplyPerturbation(Nold, amp dV, N_G); 
 
   switch (Scheme) {
 
@@ -588,7 +582,7 @@ while (done != true) {
 
     cMat[40][40] = get_cMat();
     kVec[40] = get_kVec();
-  	dt_FE = min(1.0 / *kVec[40]);
+  	dt_FE = min_element(1.0 / *kVec[40]);
 
   if (reStep) {
 
@@ -615,7 +609,7 @@ if( abs( sum(*Nnew[N_G], *dV[40]) - sum( *Nold[N_G], *dV[40] ) )  / sum ( *Nold[
 }
 
 
-if ( max( abs( Nnew - Nold ) / max( *Nold[N_G], 1.0e-8 ) ) > tolN ) {
+if ( max_element( abs( Nnew - Nold ) / max( *Nold[N_G], 1.0e-8 ) ) > tolN ) {
 
   reStep = true;
 
@@ -633,7 +627,7 @@ if ( max( abs( Nnew - Nold ) / max( *Nold[N_G], 1.0e-8 ) ) > tolN ) {
   kVec[40] = get_kVec();
 
 
-  dt = min( min( 1.0 / *kVec[40] ), dt_grw * dt);
+  dt = min( min_element( 1.0 / *kVec[40] ), dt_grw * dt);
 
   *Nnew[N_G] = *Nold[N_G] + dt * ( **cMat[40][40] * *Nold[N_G]);
   }
@@ -660,7 +654,7 @@ if ( max( abs( Nnew - Nold ) / max( *Nold[N_G], 1.0e-8 ) ) > tolN ) {
   
   double exp_kdt = exp( - dt * **k0[40][40] );
       
-    dt_FE = min( 1.0 / **k0[40][40] );
+    dt_FE = min_element( 1.0 / **k0[40][40] );
       
     if( dt <= dt_FE ) {
 
@@ -714,7 +708,7 @@ if ( max( abs( Nnew - Nold ) / max( *Nold[N_G], 1.0e-8 ) ) > tolN ) {
   	double ** k0[40][40];
   	k0[40][40] = get_k0();
       
-  dt_FE = min( 1.0 / **k0[40][40] );
+  dt_FE = min_element( 1.0 / **k0[40][40] );
 
   if (dt <= dt_FE) {
     //BuildCollisionMatrix(R_In, R_Out, Nold, dV, N_G, 0.0);
@@ -814,7 +808,7 @@ if ( max( abs( Nnew - Nold ) / max( *Nold[N_G], 1.0e-8 ) ) > tolN ) {
     cMat[40][40] = get_cMat();
     kVec[40] = get_kVec();
 
-   dt = min( min( 1.0 / *kVec[40] ), dt_grw * dt );
+   dt = min( min_element( 1.0 / *kVec[40] ), dt_grw * dt );
    *Nnew[N_G] = *Nold[N_G] + dt * ( **cMat[40][40] * *Nold[N_G] );
   
 
