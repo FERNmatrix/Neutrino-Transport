@@ -174,8 +174,7 @@ double ** get_Fp(){
 
 int Write_Plotfile() {
 
-std::fprintf(pFile, "%7.4f %7.4f %7.4f", t, dt, eC);
-
+std::fprintf(pFile, "%7.4e %7.4e", t, dt);
 FileNumber = FileNumber + 1; 
 
 return  FileNumber; 
@@ -416,7 +415,7 @@ void ComputeRates( double F[40][40], double k[40][40]) {
 
         break;
         } 
-        int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
+        // int gsl_matrix_complex_conjtrans_memcpy(gsl_matrix *R_Out, const gsl_matrix *R_In);
         default: *N_Eq[N_G] = 1.0;
       
       }
@@ -469,7 +468,7 @@ Utilities::startTimer();
   logfile();
 
 std::fprintf(pFile, "# data_output \n");
-std::fprintf(pFile, "#       t        dt  %/n");
+std::fprintf(pFile, "#       t        dt  %\n");
 
 Utilities initalizeNES; 
 
